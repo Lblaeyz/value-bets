@@ -6,6 +6,7 @@ All mutating endpoints require X-Admin-Key header.
 from __future__ import annotations
 
 import os
+from secrets import compare_digest
 from datetime import date, datetime, timezone
 from typing import Any
 
@@ -27,7 +28,7 @@ _ADMIN_KEY = os.getenv("ADMIN_API_KEY", "")
 # ------------------------------------------------------------------ #
 
 def _require_admin(key: str) -> None:
-    if _ADMIN_KEY and key != _ADMIN_KEY:
+    if not _ADMIN_KEY or not key or not compare_digest(key, _ADMIN_KEY):
         raise HTTPException(status_code=403, detail="Forbidden — invalid admin key")
 
 

@@ -88,9 +88,18 @@ SUPABASE_KEY=
 FOOTBALL_DATA_API_KEY=
 ODDS_API_KEY=
 API_FOOTBALL_KEY=
+ADMIN_API_KEY=
+CORS_ORIGINS=
 ```
 
-Optional configuration includes `ADMIN_API_KEY`, `SENTRY_DSN`,
+`SUPABASE_KEY` must be the Supabase **service-role key** because the database
+uses RLS and the backend performs ingestion and writes. Keep it only in the
+backend's server-side environment; never add it to Vercel or frontend code.
+
+`CORS_ORIGINS` should contain the Vercel URL, for example
+`https://value-bets.vercel.app`. Multiple origins can be comma-separated.
+
+Optional configuration includes `SENTRY_DSN`,
 `API_FOOTBALL_DAILY_LIMIT`, `ODDS_API_MONTHLY_LIMIT`, `MIN_DATA_QUALITY`,
 `MIN_VALUE_EDGE`, and `MIN_CONFIDENCE`.
 
@@ -106,7 +115,7 @@ Set `VITE_API_URL` to the backend origin when the API is not served from the
 same origin:
 
 ```text
-VITE_API_URL=https://your-railway-service.up.railway.app
+VITE_API_URL=https://value-bets-api.onrender.com
 ```
 
 The frontend appends its `/api/...` paths to that origin. For local development
@@ -114,28 +123,59 @@ with the backend on port 8000, use `VITE_API_URL=http://localhost:8000`.
 
 ## Deployment
 
-### Railway — backend
+### Render — backend
 
-1. Create a Railway service from this GitHub repository.
-2. Set the service root directory to `backend`.
-3. Railway uses `backend/railway.json` and starts:
+The repository includes a root-level `render.yaml` Blueprint with the backend
+root directory already set to `backend`.
+
+1. Sign in to [Render](https://render.com) and choose **New → Blueprint**.
+2. Select the `Lblaeyz/value-bets` GitHub repository.
+3. Render detects `render.yaml` and creates the `value-bets-api` web service.
+   If configuring manually instead, create a **Web Service** and set:
+
+   - Root Directory: `backend`
+   - Runtime: `Python 3`
+   - Build Command: `pip install -r requirements.txt`
+   - Start Command:
 
    ```bash
    uvicorn app.main:app --host 0.0.0.0 --port $PORT
    ```
 
-4. Add the required API keys and Supabase variables in Railway service
-   variables.
-5. Confirm `GET /api/healthz` responds successfully.
+4. In Render → service → **Environment**, set:
+
+   - `SUPABASE_URL`: your Supabase project URL
+   - `SUPABASE_KEY`: the Supabase service-role key
+   - `FOOTBALL_DATA_API_KEY`
+   - `ODDS_API_KEY`
+   - `API_FOOTBALL_KEY`
+   - `ADMIN_API_KEY`: a long random value for admin endpoints
+   - `CORS_ORIGINS`: your Vercel URL (you can add it after Vercel is created)
+   - `ENVIRONMENT`: `production`
+
+5. In Supabase SQL Editor, run
+   `migrations/002_enable_rls.sql`. This fixes the “RLS Disabled in Public”
+   warnings while keeping direct public table access closed.
+6. Deploy and confirm:
+   `https://your-render-service.onrender.com/api/healthz`
+   returns `{"status":"ok"}`.
 
 ### Vercel — frontend
 
 1. Import the same GitHub repository into Vercel.
-2. Set the project root directory to `frontend`.
+2. In the Vercel project settings, set **Root Directory** to `frontend`.
 3. Vercel uses `frontend/vercel.json`, runs `npm run build`, and serves
    `frontend/dist`.
-4. Add `VITE_API_URL` with the public Railway backend URL.
-5. Redeploy after changing environment variables because Vite embeds
+4. Add `VITE_API_URL` with the public Render backend URL, without a trailing
+   `/api`:
+
+   ```text
+   VITE_API_URL=https://your-render-service.onrender.com
+   ```
+
+5. Deploy the frontend and copy its public URL into Render’s `CORS_ORIGINS`
+   variable, then redeploy the backend.
+6. Redeploy after changing environment variables because Vite embeds
    `VITE_*` values at build time.
 
 ## API overview
