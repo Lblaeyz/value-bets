@@ -103,41 +103,46 @@ export interface PaginatedPredictions {
 }
 
 export interface PerformanceSummary {
-  total_bets: number;
-  won: number;
-  lost: number;
-  void: number;
-  win_rate: number;
+  total_predictions: number;
+  wins: number;
+  losses: number;
+  voids: number;
+  pending: number;
   roi: number;
-  yield: number;
+  yield_pct: number;
   total_profit_loss: number;
   avg_clv: number | null;
-  avg_odds: number | null;
   insufficient_data: boolean;
 }
 
 export interface PerformanceByLeague {
-  leagues: Array<{
-    league_name: string;
-    total_bets: number;
-    won: number;
-    lost: number;
-    win_rate: number;
+  data: Array<{
+    id: string;
+    name: string;
+    country: string;
+    total_predictions: number;
+    wins: number;
+    losses: number;
+    pending: number;
     roi: number;
+    yield_pct: number;
     avg_clv: number | null;
   }>;
+  total_leagues: number;
 }
 
 export interface PerformanceByMarket {
-  markets: Array<{
+  data: Array<{
     market: string;
-    total_bets: number;
-    won: number;
-    lost: number;
-    win_rate: number;
+    total_predictions: number;
+    wins: number;
+    losses: number;
+    pending: number;
     roi: number;
+    yield_pct: number;
     avg_clv: number | null;
   }>;
+  total_markets: number;
 }
 
 export interface ClvTrend {

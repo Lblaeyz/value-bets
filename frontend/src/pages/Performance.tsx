@@ -123,6 +123,8 @@ export function Performance() {
   }, []);
 
   const dimmed = summary?.insufficient_data ?? false;
+  const settledBets = summary ? summary.wins + summary.losses : 0;
+  const winRate = settledBets > 0 && summary ? summary.wins / settledBets : 0;
 
   const clvChartData = clv?.data ?? [];
 
@@ -168,11 +170,18 @@ export function Performance() {
             <section>
               <SectionTitle>Summary</SectionTitle>
 
+              {summary.total_predictions === 0 && (
+                <div className="mb-4 rounded-lg border border-blue-500/20 bg-blue-500/8 px-4 py-3 text-sm text-blue-300">
+                  No performance data yet — results will appear here after
+                  predictions have been settled.
+                </div>
+              )}
+
               {dimmed && (
                 <div className="mb-4 rounded-lg border border-yellow-500/20 bg-yellow-500/8 px-4 py-3 text-sm text-yellow-400">
                   Insufficient data —{" "}
-                  <span className="font-semibold">{summary.total_bets}</span>{" "}
-                  {summary.total_bets === 1 ? "prediction" : "predictions"} recorded.
+                  <span className="font-semibold">{summary.total_predictions}</span>{" "}
+                  {summary.total_predictions === 1 ? "prediction" : "predictions"} recorded.
                   Minimum 50 needed for meaningful statistics.
                 </div>
               )}
@@ -180,21 +189,21 @@ export function Performance() {
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <StatCard
                   label="Total Predictions"
-                  value={String(summary.total_bets)}
-                  sub={`${summary.won}W · ${summary.lost}L · ${summary.void}V`}
+                  value={String(summary.total_predictions)}
+                  sub={`${summary.wins}W · ${summary.losses}L · ${summary.voids}V`}
                   dimmed={dimmed}
                 />
                 <StatCard
                   label="ROI"
                   value={fmtRoi(summary.roi)}
-                  sub={`yield ${fmtRoi(summary.yield ?? summary.roi)}`}
+                  sub={`yield ${fmtRoi(summary.yield_pct)}`}
                   color={summary.roi >= 0 ? "text-green-400" : "text-red-400"}
                   dimmed={dimmed}
                 />
                 <StatCard
                   label="Win Rate"
-                  value={`${(summary.win_rate * 100).toFixed(1)}%`}
-                  sub={`avg odds ${summary.avg_odds !== null ? fmt(summary.avg_odds, 2) : "—"}`}
+                  value={`${(winRate * 100).toFixed(1)}%`}
+                  sub={`${settledBets} settled bets`}
                   dimmed={dimmed}
                 />
                 <StatCard
@@ -370,7 +379,7 @@ export function Performance() {
             </section>
 
             {/* ── SECTION 4: By League ── */}
-            {leagues && leagues.leagues.length > 0 && (
+            {leagues && leagues.data.length > 0 && (
               <section>
                 <SectionTitle>By League</SectionTitle>
                 <div className="overflow-hidden rounded-xl border border-white/8 bg-[#1a1a1a]">
@@ -385,13 +394,14 @@ export function Performance() {
                       </tr>
                     </thead>
                     <tbody>
-                      {[...leagues.leagues]
+                      {[...leagues.data]
                         .sort((a, b) => b.roi - a.roi)
                         .map((row, i) => {
                           const highlight = row.roi > 0.1;
+                          const rowSettled = row.wins + row.losses;
                           return (
                             <tr
-                              key={row.league_name}
+                              key={row.id}
                               className={`border-b border-white/5 last:border-0 transition-colors ${
                                 highlight
                                   ? "bg-green-500/5 hover:bg-green-500/8"
@@ -404,14 +414,17 @@ export function Performance() {
                                     highlight ? "text-green-300" : "text-neutral-200"
                                   }`}
                                 >
-                                  {row.league_name}
+                                  {row.name}
+                                  {row.country ? ` · ${row.country}` : ""}
                                 </span>
                               </td>
                               <td className="px-4 py-2.5 text-right tabular-nums text-neutral-400">
-                                {row.total_bets}
+                                {row.total_predictions}
                               </td>
                               <td className="px-4 py-2.5 text-right tabular-nums text-neutral-300">
-                                {(row.win_rate * 100).toFixed(1)}%
+                                {rowSettled > 0
+                                  ? `${((row.wins / rowSettled) * 100).toFixed(1)}%`
+                                  : "—"}
                               </td>
                               <td
                                 className={`px-4 py-2.5 text-right tabular-nums font-semibold ${
@@ -441,7 +454,7 @@ export function Performance() {
             )}
 
             {/* ── SECTION 5: By Market ── */}
-            {markets && markets.markets.length > 0 && (
+            {markets && markets.data.length > 0 && (
               <section>
                 <SectionTitle>By Market</SectionTitle>
                 <div className="overflow-hidden rounded-xl border border-white/8 bg-[#1a1a1a]">
@@ -456,10 +469,11 @@ export function Performance() {
                       </tr>
                     </thead>
                     <tbody>
-                      {[...markets.markets]
+                      {[...markets.data]
                         .sort((a, b) => b.roi - a.roi)
                         .map((row, i) => {
                           const highlight = row.roi > 0.1;
+                          const rowSettled = row.wins + row.losses;
                           return (
                             <tr
                               key={row.market}
@@ -479,10 +493,12 @@ export function Performance() {
                                 </span>
                               </td>
                               <td className="px-4 py-2.5 text-right tabular-nums text-neutral-400">
-                                {row.total_bets}
+                                {row.total_predictions}
                               </td>
                               <td className="px-4 py-2.5 text-right tabular-nums text-neutral-300">
-                                {(row.win_rate * 100).toFixed(1)}%
+                                {rowSettled > 0
+                                  ? `${((row.wins / rowSettled) * 100).toFixed(1)}%`
+                                  : "—"}
                               </td>
                               <td
                                 className={`px-4 py-2.5 text-right tabular-nums font-semibold ${
