@@ -99,9 +99,24 @@ backend's server-side environment; never add it to Vercel or frontend code.
 `CORS_ORIGINS` should contain the Vercel URL, for example
 `https://value-bets.vercel.app`. Multiple origins can be comma-separated.
 
-Optional configuration includes `SENTRY_DSN`,
-`API_FOOTBALL_DAILY_LIMIT`, `ODDS_API_MONTHLY_LIMIT`, `MIN_DATA_QUALITY`,
-`MIN_VALUE_EDGE`, and `MIN_CONFIDENCE`.
+The current recommendation thresholds are:
+
+```text
+MIN_VALUE_EDGE=1.5
+MIN_CONFIDENCE=21
+MIN_DATA_QUALITY=18
+MIN_MODEL_PROB=16.5
+```
+
+These are intentionally permissive exploratory thresholds. They do not change
+the external API call budgets or force a recommendation when no odds are
+available.
+
+If these variables already exist in Render, update their existing values
+manually—existing service variables override the defaults in the source code.
+
+Optional configuration includes `SENTRY_DSN`, `API_FOOTBALL_DAILY_LIMIT`, and
+`ODDS_API_MONTHLY_LIMIT`.
 
 ### Frontend
 

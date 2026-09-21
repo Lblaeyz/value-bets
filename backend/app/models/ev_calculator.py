@@ -14,10 +14,10 @@ from app.utils.logger import logger
 # Thresholds from environment
 # ------------------------------------------------------------------ #
 
-MIN_VALUE_EDGE: float  = float(os.getenv("MIN_VALUE_EDGE",    "5"))  / 100   # e.g. 5 → 0.05
-MIN_CONFIDENCE: float  = float(os.getenv("MIN_CONFIDENCE",    "70")) / 100   # e.g. 70 → 0.70
-MIN_DATA_QUALITY: float = float(os.getenv("MIN_DATA_QUALITY", "60")) / 100   # e.g. 60 → 0.60
-MIN_MODEL_PROB: float  = 0.55                                                 # skip markets < 55%
+MIN_VALUE_EDGE: float  = float(os.getenv("MIN_VALUE_EDGE",    "1.5")) / 100   # 1.5%
+MIN_CONFIDENCE: float  = float(os.getenv("MIN_CONFIDENCE",    "21"))  / 100   # 21%
+MIN_DATA_QUALITY: float = float(os.getenv("MIN_DATA_QUALITY", "18"))  / 100   # 18%
+MIN_MODEL_PROB: float  = float(os.getenv("MIN_MODEL_PROB",    "16.5")) / 100  # 16.5%
 
 # ------------------------------------------------------------------ #
 # Market key → Poisson probability dict key mapping
@@ -186,7 +186,7 @@ def find_best_market(
     and return the single bet with the highest value edge.
 
     Filters applied:
-      • Model probability must be ≥ 55% (MIN_MODEL_PROB)
+      • Model probability must be ≥ MIN_MODEL_PROB (default 16.5%)
       • Value edge must be > MIN_VALUE_EDGE
       • Unknown markets (no probability mapping) are silently skipped
 

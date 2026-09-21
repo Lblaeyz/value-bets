@@ -27,3 +27,11 @@ services:
         sync: false
       - key: SENTRY_DSN
         sync: false
+      - key: MIN_VALUE_EDGE
+        value: "1.5"
+      - key: MIN_CONFIDENCE
+        value: "21"
+      - key: MIN_DATA_QUALITY
+        value: "18"
+      - key: MIN_MODEL_PROB
+        value: "16.5"
